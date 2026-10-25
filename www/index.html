@@ -143,7 +143,7 @@ function more(){
  const now=nowS(),up=S.hw.filter(x=>x.st!='done'&&x.due).sort((a,b)=>a.due<b.due?-1:1).slice(0,5);
  return`<h1>Ещё</h1><h2>Профиль</h2><div class="card"><label style="margin:0">Имя<input id="pname" value="${esc(S.profile.name)}"></label>
  <label>Тема<select id="theme">${[['auto','Системная'],['light','Светлая'],['dark','Тёмная']].map(([k,v])=>`<option value="${k}"${S.theme==k?' selected':''}>${v}</option>`).join('')}</select></label></div>
- <h2>🎓 Экзамены и контрольные</h2><div class="card"><select id="ex_sub">${S.subj.map(s=>`<option>${esc(s)}</option>`).join('')}</select><input id="ex_t" placeholder="Что сдаём / что повторить"><input id="ex_d" type="date"><button style="margin-top:8px" data-a="exadd">Добавить</button></div>${[...S.exams].sort((a,b)=>a.d<b.d?-1:1).map(x=>`<div class="card row sp"><div><b>${esc(x.sub)}</b><div class="mu">${esc(x.t)} · ${x.d.split('-').reverse().join('.')}</div></div><span>${Math.ceil((new Date(x.d+'T00:00')-new Date())/864e5)} дн. <button class="chip" data-a="exdel:${x.id}">🗑</button></span></div>`).join('')}
+ <h2>Хранилище</h2><div class="row wrap"><button class="g" data-a="tab:files">📁 Файлы</button><button class="g" data-a="tab:tpl">📄 Шаблоны</button><button class="g" data-a="ntest">🔔 Проверить уведомление</button></div><h2>🎓 Экзамены и контрольные</h2><div class="card"><select id="ex_sub">${S.subj.map(s=>`<option>${esc(s)}</option>`).join('')}</select><input id="ex_t" placeholder="Что сдаём / что повторить"><input id="ex_d" type="date"><button style="margin-top:8px" data-a="exadd">Добавить</button></div>${[...S.exams].sort((a,b)=>a.d<b.d?-1:1).map(x=>`<div class="card row sp"><div><b>${esc(x.sub)}</b><div class="mu">${esc(x.t)} · ${x.d.split('-').reverse().join('.')}</div></div><span>${Math.ceil((new Date(x.d+'T00:00')-new Date())/864e5)} дн. <button class="chip" data-a="exdel:${x.id}">🗑</button></span></div>`).join('')}
 <h2>⚙️ Виджеты главной и уведомления</h2><div class="card row wrap">${[['free','Окна'],['exam','Экзамен'],['pomo','Помодоро'],['tom','Завтра'],['prog','Прогресс']].map(([k,v])=>`<button class="chip${S.wd[k]?' on':''}" data-a="wd:${k}">${v}</button>`).join('')}<button class="chip${S.notif?' on':''}" data-a="notif">🔔 Уведомления</button></div>
 <h2>Ближайшие сдачи</h2><div class="card">${up.length?up.map(x=>`<div class="row sp" style="margin:4px 0"><span>${esc(x.title)}</span><span class="mu">${x.due.slice(5,10).split('-').reverse().join('.')}</span></div>`).join(''):'<span class="mu">Нет горящих заданий</span>'}</div>
  <h2>Прогресс</h2><div class="card">${ST.map(([k,v])=>`<div class="row sp"><span>${v}</span><b>${S.hw.filter(x=>x.st==k).length}</b></div>`).join('')}</div>
@@ -152,7 +152,7 @@ function more(){
 function render(){
  document.documentElement.dataset.theme=S.theme=='auto'?'':S.theme;
  $('#nav').innerHTML=[['home','🏠','Главная'],['sched','📅','Расписание'],['hw','📚','ДЗ'],['notes','📝','Заметки'],['more','⋯','Ещё']].map(([k,i,t])=>`<button class="${ui.tab==k?'on':''}" data-a="tab:${k}"><b>${i}</b>${t}</button>`).join('');
- $('#app').innerHTML={home,sched,hw:hwView,notes,more,search}[ui.tab]()}
+ $('#app').innerHTML={home,sched,hw:hwView,notes,more,search,files:filesV,tpl:tplV}[ui.tab]()}
 /* actions */
 let fmt='w';
 document.addEventListener('click',async ev=>{
@@ -162,13 +162,13 @@ document.addEventListener('click',async ev=>{
  else if(a=='day')ui.sel=el.dataset.a.slice(4);
  else if(a=='mp'){ui.cm--;if(ui.cm<0){ui.cm=11;ui.cy--}}
  else if(a=='mn'){ui.cm++;if(ui.cm>11){ui.cm=0;ui.cy++}}
- else if(a=='clrs'){if(confirm('Очистить расписание?')){S.events=[];save()}}
+ else if(a=='clrs'){if(await ask('Очистить расписание?')){S.events=[];save()}}
  else if(a=='newhw'){ui.tab='hw';ui.form=true;ui.errs={};fmt='w'}
  else if(a=='cancelhw')ui.form=false;
  else if(a=='fmt'){fmt=p;$('#fw').classList.toggle('on',p=='w');$('#fp').classList.toggle('on',p=='p');return}
  else if(a=='f')ui.f=p;
  else if(a=='st'){S.hw.find(x=>x.id==p).st=q;save()}
- else if(a=='del'){if(confirm('Удалить задание?')){S.hw=S.hw.filter(x=>x.id!=p);save()}}
+ else if(a=='del'){if(await ask('Удалить задание?')){S.hw=S.hw.filter(x=>x.id!=p);save()}}
  else if(a=='file'){try{const f=await fget(p);if(!f)return toast('Файл не найден');open(URL.createObjectURL(f),'_blank')}catch(e){toast('⚠ '+e.message)}return}
  else if(a=='savehw'){
   const sub=$('#f_sub').value,title=$('#f_title').value.trim();ui.errs={};
@@ -192,7 +192,7 @@ document.addEventListener('click',async ev=>{
  else if(a=='newnote'){const n={id:uid(),title:'',blocks:[{t:'t',x:'',c:0}]};S.notes.unshift(n);save();ui.tab='notes';ui.note=n.id}
  else if(a=='open')ui.note=p;
  else if(a=='nback')ui.note=null;
- else if(a=='ndel'){if(confirm('Удалить заметку?')){S.notes=S.notes.filter(x=>x.id!=ui.note);ui.note=null;save()}}
+ else if(a=='ndel'){if(await ask('Удалить заметку?')){S.notes=S.notes.filter(x=>x.id!=ui.note);ui.note=null;save()}}
  else if(a=='add'){S.notes.find(x=>x.id==ui.note).blocks.push({t:p,x:'',c:0});save();render();const i=document.querySelectorAll('#blks input[data-i]');i[i.length-1]?.focus();return}
  else if(a=='rm'){const n=S.notes.find(x=>x.id==ui.note);n.blocks.splice(+p,1);if(!n.blocks.length)n.blocks.push({t:'t',x:'',c:0});save()}
  else if(a=='exp'){const u=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));const l=document.createElement('a');l.href=u;l.download='planner.json';l.click();return}
@@ -215,5 +215,125 @@ setInterval(()=>{const n=new Date(),c=$('#clk');if(n.getSeconds()==0)remind(n);c
 if(ui.tab!='home')return;const h=$('#hero');
 if(h&&h.dataset.e){const s=new Date(h.dataset.s),e=new Date(h.dataset.e);if(n>=e){render();return}$('#cd').textContent=cd(e-n);$('#pb').style.width=Math.min(100,(n-s)/(e-s)*100)+'%'}
 else if(n.getSeconds()==0)render()},1000);
+/* ===== v3: files, hw card, notes pro ===== */
+document.head.insertAdjacentHTML('beforeend','<style>.blk{align-items:flex-start}.ce{word-break:break-word;white-space:pre-wrap}.ce:empty:before{content:"Пишите…";color:var(--mu)}</style>');
+ui.ff='all';ui.hwo=null;ui.bm=null;ui.nq='';ui.rec=null;ui.lp=false;
+const plain=h=>String(h||'').replace(/<[^>]*>/g,' '),isImg=n=>/\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(n||'');
+const TPL=[['Титульный лист',[['h1','Титульный лист'],['t','Севастопольский государственный университет, ГПИ'],['t','Предмет: '],['t','Тема: '],['t','Выполнил: Пестров Святослав Дмитриевич'],['t','Группа: ПОфк/б-26-1-0'],['t','Проверил: '],['t','Севастополь, 2026']]],['Конспект лекции',[['h1','Тема'],['t','Дата: '],['co','Главное: '],['h2','Конспект'],['ul',''],['h2','Вопросы'],['td','']]],['Реферат',[['h1','Тема реферата'],['h2','Введение'],['t',''],['h2','Основная часть'],['t',''],['h2','Заключение'],['t',''],['h2','Список литературы'],['ul','']]],['Лабораторная',[['h1','Лабораторная работа №'],['h2','Цель'],['t',''],['h2','Ход работы'],['t',''],['h2','Выводы'],['t','']]],['План недели',[['h1','План недели'],...DAYS.flatMap(d=>[['h2',d],['td','']])]]];
+const d2b=u=>{const[h,b]=u.split(','),m=h.match(/:(.*?);/)[1],a=atob(b),n=new Uint8Array(a.length);for(let i=0;i<a.length;i++)n[i]=a.charCodeAt(i);return new Blob([n],{type:m})};
+async function addFiles(fl){const out=[];for(const f of fl){let b=f;try{if(f.type.startsWith('image/')){const im=await createImageBitmap(f),k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);b=await new Promise(r=>c.toBlob(r,'image/jpeg',.85))||f}}catch(e){b=f}const k=uid();await fput(k,b);out.push({k,n:f.name})}return out}
+async function viewF(k,n){const b=await fget(k);if(!b)return toast('Файл не найден');const u=URL.createObjectURL(b),t=b.type||'';
+const c=t.startsWith('image/')||isImg(n)?`<img src="${u}" style="max-width:100%;max-height:70vh">`:t.startsWith('audio/')?`<audio controls src="${u}"></audio>`:t=='application/pdf'&&!NAT?`<iframe src="${u}" style="width:100%;height:70vh;border:0;background:#fff"></iframe>`:'<p>Предпросмотр недоступен</p>';
+const d=document.createElement('div');d.id='vw';d.style.cssText='position:fixed;inset:0;background:#000d;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;color:#fff;gap:10px';
+d.innerHTML=`<div>${esc(n)} · ${Math.ceil(b.size/1024)} КБ</div>${c}<div class="row">${NAT?`<button data-a="fshare:${k}:${encodeURIComponent(n)}">📤 Открыть в…</button>`:`<a class="btn" href="${u}" download="${esc(n)}">⬇ Скачать</a>`}${(t.startsWith('image/')||isImg(n))?`<button class="g" data-a="fscan:${k}:${encodeURIComponent(n)}">🧾 Как скан</button>`:''}<button class="g" data-a="vclose">Закрыть</button></div>`;document.body.appendChild(d)}
+function hydrate(){document.querySelectorAll('[data-fid]').forEach(async el=>{try{const b=await fget(el.dataset.fid);if(b)el.src=URL.createObjectURL(b)}catch(e){}});
+document.querySelectorAll('.card .chip[data-a^="del:"]').forEach(b=>{b.closest('.card').dataset.hid=b.dataset.a.split(':')[1]})}
+const _r=render;render=()=>{_r();hydrate()};
+const fth=(f,pre)=>`<div style="width:92px;text-align:center;position:relative"><div data-a="file:${f.k}:${encodeURIComponent(f.n)}">${isImg(f.n)?`<img data-fid="${f.k}" style="width:84px;height:84px;object-fit:cover;border-radius:10px">`:'<div style="font-size:38px">📄</div>'}<div class="mu" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.n)}</div></div><button class="chip" style="position:absolute;top:-4px;right:-2px;padding:0 6px;min-height:22px" data-a="${pre}:${f.k}">✕</button></div>`;
+const _hv=hwView;hwView=()=>ui.hwo?hwDet():_hv();
+function hwDet(){const x=S.hw.find(y=>y.id==ui.hwo);if(!x){ui.hwo=null;return _hv()}
+return`<div class="row sp"><button class="g sm" data-a="hwb">‹ Назад</button><button class="chip" data-a="del:${x.id}">🗑</button></div><div class="card" style="margin-top:10px"><span class="tag" style="background:${col(x.sub)}">${esc(x.sub)}</span><h2 style="margin:8px 0">${esc(x.title)}</h2>${x.note?`<div>${esc(x.note)}</div>`:''}<div class="mu" style="margin:6px 0">${x.fmt=='w'?'✍️ письменно':'💻 печатно'} · срок: ${x.due?x.due.replace('T',' '):'—'}</div><div class="row wrap">${ST.map(([k,v])=>`<button class="chip${x.st==k?' on':''}" data-a="st:${x.id}:${k}">${v}</button>`).join('')}</div></div><h2>Вложения</h2><div class="card"><div class="row wrap">${(x.files||[]).map(f=>fth(f,'hf:'+x.id)).join('')||'<span class="mu">Нет файлов</span>'}</div><label class="btn" style="display:inline-block;margin-top:10px;color:#fff">＋ Из галереи / файлы<input id="hwadd" type="file" multiple hidden></label></div>`}
+function filesV(){const L=[];S.hw.forEach(x=>(x.files||[]).forEach(f=>L.push({...f,s:'ДЗ: '+x.title})));S.notes.forEach(n=>n.blocks.forEach(b=>{if(b.fid)L.push({k:b.fid,n:b.n||'файл',s:'Заметка: '+(n.title||'Без названия')})}));
+const l=L.filter(f=>ui.ff=='all'||(ui.ff=='img'?isImg(f.n):!isImg(f.n)));
+return`<div class="row sp"><h1>Файлы</h1><button class="g sm" data-a="tab:more">‹</button></div><div class="row wrap" style="margin:10px 0">${[['all','Все'],['img','Фото'],['doc','Документы']].map(([k,v])=>`<button class="chip${ui.ff==k?' on':''}" data-a="ff:${k}">${v}</button>`).join('')}</div>`+(l.map(f=>`<div class="card row" data-a="file:${f.k}:${encodeURIComponent(f.n)}">${isImg(f.n)?`<img data-fid="${f.k}" style="width:52px;height:52px;object-fit:cover;border-radius:8px">`:'<span style="font-size:30px">📄</span>'}<div><b>${esc(f.n)}</b><div class="mu">${esc(f.s)}</div></div></div>`).join('')||'<div class="card mu">Файлов пока нет</div>')}
+function tplV(){return`<div class="row sp"><h1>Шаблоны</h1><button class="g sm" data-a="tab:more">‹</button></div><div style="height:10px"></div>${TPL.map((t,i)=>`<div class="card row sp"><b>${t[0]}</b><button class="sm" data-a="tplnew:${i}">Создать</button></div>`).join('')}`}
+function nlist(){const q=(ui.nq||'').toLowerCase(),l=S.notes.filter(n=>!q||(n.title+' '+(n.tags||'')+n.blocks.map(b=>plain(b.x)).join(' ')).toLowerCase().includes(q));
+const row=(n,d)=>`<div class="card" style="margin-left:${d*18}px" data-a="open:${n.id}"><div class="row sp"><b>${n.fav?'★ ':''}${esc(n.title||'Без названия')}</b><span class="mu">${esc(n.sub||'')}</span></div><div class="mu">${esc(n.tags||'')}</div></div>`;
+const tree=(p,d)=>l.filter(n=>p===''?(!n.p||!S.notes.some(m=>m.id==n.p)):n.p==p).sort((a,b)=>(b.fav?1:0)-(a.fav?1:0)).map(n=>row(n,d)+tree(n.id,d+1)).join('');
+return(q?l.map(n=>row(n,0)).join(''):tree('',0))||'<div class="card mu">Пусто</div>'}
+function notes(){return ui.note?ned():`<div class="row sp"><h1>Заметки</h1><button data-a="newnote">＋ Новая</button></div><input id="nq" placeholder="Поиск по заметкам" value="${esc(ui.nq||'')}" style="margin:10px 0"><div id="nl">${nlist()}</div>`}
+function lpick(){return`<div class="card" style="margin-top:8px"><b>Вставить ссылку</b>${S.notes.filter(n=>n.id!=ui.note).map(n=>`<div class="chip" style="margin:4px 0" data-a="lnk:n:${n.id}">📝 ${esc(n.title||'Без названия')}</div>`).join('')}${S.hw.map(x=>`<div class="chip" style="margin:4px 0" data-a="lnk:h:${x.id}">📚 ${esc(x.title)}</div>`).join('')}</div>`}
+function nb(b,i){const l=(b.l||0)*20;let c;
+if(b.t=='im')c=`<img data-fid="${b.fid}" style="max-width:100%;border-radius:10px" data-a="file:${b.fid}:${encodeURIComponent(b.n||'')}">`;
+else if(b.t=='au')c=`<audio controls data-fid="${b.fid}"></audio>`;
+else if(b.t=='fl')c=`<button class="chip" data-a="file:${b.fid}:${encodeURIComponent(b.n)}">📎 ${esc(b.n)}</button>`;
+else if(b.t=='lk'){const[k,id]=b.ref.split(':'),o=k=='n'?S.notes.find(x=>x.id==id):S.hw.find(x=>x.id==id);c=`<button class="chip" data-a="${k=='n'?'open:'+id:'hwo:'+id}">${k=='n'?'📝':'📚'} ${esc(o?(o.title||'Без названия'):'удалено')}</button>`}
+else c=`${b.t=='ul'?'<span>•</span>':b.t=='td'?`<input type="checkbox" data-a="nchk:${i}" ${b.c?'checked':''}>`:b.t=='co'?'<span>💡</span>':''}<div class="ce ${b.t=='h1'?'h1':b.t=='h2'?'h2':''}${b.c?' done':''}" contenteditable data-b="${i}" style="flex:1;min-height:24px;padding:6px 4px;outline:0;${b.t=='co'?'background:var(--bd);border-radius:10px;padding:10px':''}">${b.x||''}</div>`;
+return`<div class="blk" style="margin-left:${l}px">${c}<button class="chip" style="border:0" data-a="bm:${i}">⋮</button></div>${ui.bm===i?`<div class="row wrap" style="margin-left:${l}px"><button class="chip" data-a="bmv:${i}:-1">↑</button><button class="chip" data-a="bmv:${i}:1">↓</button><button class="chip" data-a="bin:${i}:-1">←</button><button class="chip" data-a="bin:${i}:1">→</button><button class="chip" data-a="brm:${i}">🗑</button></div>`:''}`}
+function ned(){const n=S.notes.find(x=>x.id==ui.note);if(!n){ui.note=null;return notes()}const par=S.notes.find(m=>m.id==n.p);
+return`<div class="row sp"><button class="g sm" data-a="${par?'open:'+par.id:'nback'}">‹ ${par?esc(par.title||'Назад'):'Назад'}</button><span><button class="chip" data-a="nfav">${n.fav?'★':'☆'}</button> <button class="chip" data-a="nsub">＋ Подстраница</button> <button class="chip" data-a="ndel">🗑</button></span></div>
+<input id="ntitle" class="h1" style="border:0;background:none;padding:12px 0" value="${esc(n.title)}" placeholder="Название">
+<div class="row"><select id="nsubj"><option value="">Предмет</option>${S.subj.map(s=>`<option${n.sub==s?' selected':''}>${esc(s)}</option>`).join('')}</select><input id="ntags" placeholder="#теги" value="${esc(n.tags||'')}"></div>
+<div class="row wrap tb" style="margin:10px 0;position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:3">${[['bold','B'],['italic','I'],['underline','U'],['strikeThrough','S']].map(([f,v])=>`<button class="chip" data-f="${f}">${v}</button>`).join('')}<button class="chip" data-f="hiliteColor" data-v="#ffe066">🖍</button><button class="chip" data-f="foreColor" data-v="#e5484d">A</button></div>
+<div id="blks">${n.blocks.map(nb).join('')}</div>
+<div class="row wrap" style="margin-top:12px">${[['t','Текст'],['h1','H1'],['h2','H2'],['ul','• Список'],['td','☐ To-do'],['co','💡 Callout']].map(([k,v])=>`<button class="chip" data-a="nadd:${k}">＋ ${v}</button>`).join('')}<label class="chip">🖼 Фото<input id="nimg" type="file" accept="image/*" multiple hidden></label><label class="chip">📎 Файл<input id="nfile" type="file" multiple hidden></label><button class="chip${ui.rec?' on':''}" data-a="nrec">${ui.rec?'⏹ Стоп':'🎙 Запись'}</button><button class="chip" data-a="nlp">🔗 Ссылка</button></div>${ui.lp?lpick():''}`}
+const NN=()=>S.notes.find(x=>x.id==ui.note),foc=i=>setTimeout(()=>document.querySelector(`.ce[data-b="${i}"]`)?.focus(),0);
+const sv=c=>{const n=NN();if(n){n.blocks[+c.dataset.b].x=c.innerHTML;save()}};
+async function rec(){if(ui.rec){ui.rec.stop();return}try{const s=await navigator.mediaDevices.getUserMedia({audio:true}),r=new MediaRecorder(s),ch=[];r.ondataavailable=e=>ch.push(e.data);r.onstop=async()=>{s.getTracks().forEach(t=>t.stop());const k=uid();await fput(k,new Blob(ch,{type:r.mimeType||'audio/webm'}));const n=NN();if(n){n.blocks.push({t:'au',fid:k,n:'Запись '+new Date().toLocaleTimeString('ru'),l:0});save()}ui.rec=null;render()};r.start();ui.rec=r;render()}catch(e){toast('⚠ Нет доступа к микрофону')}}
+async function exportAll(){const ks=new Set;S.hw.forEach(x=>(x.files||[]).forEach(f=>ks.add(f.k)));S.notes.forEach(n=>n.blocks.forEach(b=>b.fid&&ks.add(b.fid)));const fl={};for(const k of ks){const b=await fget(k);if(b)fl[k]=await new Promise(r=>{const f=new FileReader;f.onload=()=>r(f.result);f.readAsDataURL(b)})}
+const u=URL.createObjectURL(new Blob([JSON.stringify({...S,_files:fl})],{type:'application/json'})),l=document.createElement('a');if(NAT){const{Filesystem,Share}=Capacitor.Plugins,w=await Filesystem.writeFile({path:'planner-backup.json',data:btoa(unescape(encodeURIComponent(JSON.stringify({...S,_files:fl})))),directory:'CACHE'});await Share.share({title:'Резервная копия планнера',url:w.uri});return}l.href=u;l.download='planner.json';l.click();toast('✓ Экспорт вместе с файлами')}
+document.addEventListener('mousedown',e=>{if(e.target.closest('.tb'))e.preventDefault()});
+document.addEventListener('paste',e=>{if(e.target.classList?.contains('ce')){e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))}});
+document.addEventListener('input',e=>{const t=e.target;if(t.classList?.contains('ce'))sv(t);else if(t.id=='ntags'){NN().tags=t.value;save()}else if(t.id=='nq'){ui.nq=t.value;$('#nl').innerHTML=nlist()}});
+document.addEventListener('keydown',e=>{const c=e.target;if(!c.classList?.contains('ce'))return;const n=NN(),i=+c.dataset.b,b=n.blocks[i];
+if(e.key=='Enter'&&!e.shiftKey){e.preventDefault();n.blocks.splice(i+1,0,{t:['ul','td'].includes(b.t)?b.t:'t',x:'',c:0,l:b.l||0});save();render();foc(i+1)}
+else if(e.key=='Backspace'&&!c.textContent&&n.blocks.length>1){e.preventDefault();n.blocks.splice(i,1);save();render();foc(Math.max(0,i-1))}},true);
+document.addEventListener('change',async e=>{const t=e.target,id=t.id;
+if(id=='nsubj'){NN().sub=t.value;save();return}
+if(id=='hwadd'||id=='nimg'||id=='nfile'){e.stopImmediatePropagation();try{const fs=await addFiles(t.files);if(id=='hwadd'){const x=S.hw.find(y=>y.id==ui.hwo);x.files=[...(x.files||[]),...fs]}else NN().blocks.push(...fs.map(f=>({t:isImg(f.n)?'im':'fl',fid:f.k,n:f.n,l:0})));if(save())toast('✓ Файлов добавлено: '+fs.length)}catch(x){toast('⚠ '+x.message)}render();return}
+if(id=='imp'&&t.files[0]){e.stopImmediatePropagation();try{const j=JSON.parse(await t.files[0].text());for(const[k,v]of Object.entries(j._files||{}))await fput(k,d2b(v));delete j._files;S=Object.assign(S,j);save();render();toast('✓ Импортировано')}catch(x){toast('⚠ Не тот файл')}}},true);
+document.addEventListener('click',async ev=>{const t=ev.target,fb=t.closest('[data-f]');
+if(fb){document.execCommand(fb.dataset.f,false,fb.dataset.v||null);const c=getSelection().anchorNode?.parentElement?.closest('.ce');if(c)sv(c);return}
+const el=t.closest('[data-a]');
+if(!el||el.dataset.a.startsWith('del:')&&0){const h=t.closest('.card[data-hid]');if(!el&&h&&ui.tab=='hw'&&!ui.hwo&&!t.closest('button')){ui.hwo=h.dataset.hid;render()}return}
+const[a,p,q]=el.dataset.a.split(':');
+if(a=='tab'){ui.hwo=null;return}
+if(!['file','vclose','hwo','hwb','hf','ff','nfav','nsub','nadd','nchk','nrec','nlp','lnk','bm','bmv','bin','brm','ntest','exp','tplnew','fshare','notif','fscan'].includes(a))return;
+ev.stopImmediatePropagation();const bl=()=>NN().blocks;
+if(a=='file'){viewF(p,decodeURIComponent(q||''));return}
+if(a=='vclose'){$('#vw')?.remove();return}
+if(a=='exp'){exportAll().catch(e=>toast('⚠ '+(e.message||e)));return}
+if(a=='nrec'){rec();return}
+if(a=='ntest'){await testN();return}if(a=='notif'){await togN();return}if(a=='fshare'){shareF(p,decodeURIComponent(q||''));return}if(a=='fscan'){fscan(p,decodeURIComponent(q||''));return}
+if(a=='hwo'){ui.tab='hw';ui.hwo=p}
+else if(a=='hwb')ui.hwo=null;
+else if(a=='hf'){const x=S.hw.find(y=>y.id==p);x.files=x.files.filter(f=>f.k!=q);save()}
+else if(a=='ff')ui.ff=p;
+else if(a=='nfav'){NN().fav=!NN().fav;save()}
+else if(a=='nsub'){const c={id:uid(),title:'',p:ui.note,blocks:[{t:'t',x:'',c:0}]};S.notes.unshift(c);save();ui.note=c.id}
+else if(a=='nadd'){bl().push({t:p,x:'',c:0,l:0});save();render();foc(bl().length-1);return}
+else if(a=='nchk'){bl()[+p].c=el.checked?1:0;save()}
+else if(a=='nlp')ui.lp=!ui.lp;
+else if(a=='lnk'){bl().push({t:'lk',ref:p+':'+q,l:0});ui.lp=false;save()}
+else if(a=='bm')ui.bm=ui.bm===+p?null:+p;
+else if(a=='bmv'){const i=+p,j=i+(+q),b=bl();if(b[j]){[b[i],b[j]]=[b[j],b[i]];ui.bm=j;save()}}
+else if(a=='bin'){const b=bl()[+p];b.l=Math.max(0,Math.min(3,(b.l||0)+(+q)));save()}
+else if(a=='brm'){bl().splice(+p,1);if(!bl().length)bl().push({t:'t',x:'',c:0});ui.bm=null;save()}
+else if(a=='tplnew'){const tp=TPL[+p],c={id:uid(),title:tp[0],blocks:tp[1].map(([t,x])=>({t,x,c:0,l:0}))};S.notes.unshift(c);save();ui.tab='notes';ui.note=c.id}
+render()},true);
+/* ===== v4: in-app confirm, native notifications/share, load widget ===== */
+function ask(m){return new Promise(r=>{const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#0008;z-index:30;display:flex;align-items:center;justify-content:center;padding:20px';d.innerHTML=`<div class="card" style="max-width:340px;width:100%"><div style="margin-bottom:12px">${esc(m)}</div><div class="row"><button data-k="1">Да</button><button class="g" data-k="0">Отмена</button></div></div>`;d.onclick=e=>{const k=e.target.closest('[data-k]');if(k||e.target===d){d.remove();r(!!k&&k.dataset.k=='1')}};document.body.appendChild(d)})}
+const NAT=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()),LN=NAT?Capacitor.Plugins.LocalNotifications:null;
+let _st;function schedN(){if(!NAT||!S.notif)return;clearTimeout(_st);_st=setTimeout(async()=>{try{const pend=await LN.getPending();if(pend.notifications.length)await LN.cancel(pend);const L=[],now=Date.now();let id=1;
+for(let i=0;i<8;i++){for(const e of dayEv(ymd(new Date(now+i*864e5)))){const t=new Date(e.s).getTime()-6e5;if(t>now&&L.length<45)L.push({id:id++,title:'Скоро пара',body:e.sub+' в '+hm(e.s)+(e.loc?' · '+e.loc:''),schedule:{at:new Date(t),allowWhileIdle:true}})}}
+for(const x of S.hw){if(x.st=='done'||!x.due)continue;for(const[off,lbl]of[[864e5,'завтра'],[36e5,'через час']]){const t=new Date(x.due).getTime()-off;if(t>now&&L.length<60)L.push({id:id++,title:'ДЗ: срок '+lbl,body:x.title+' · '+x.sub,schedule:{at:new Date(t),allowWhileIdle:true}})}}
+L.push({id:900000,title:'Резервная копия',body:'Сделайте копию: Ещё → Экспорт JSON',schedule:{on:{weekday:1,hour:20,minute:0},allowWhileIdle:true}});
+await LN.schedule({notifications:L})}catch(e){}},1500)}
+const _s0=save;save=()=>{const r=_s0();schedN();return r};
+const _rm=remind;remind=n=>{if(!NAT)_rm(n)};
+async function togN(){if(S.notif){S.notif=0;save();if(NAT){try{const p=await LN.getPending();if(p.notifications.length)await LN.cancel(p)}catch(e){}}toast('Уведомления выключены');render();return}
+if(NAT){try{const r=await LN.requestPermissions();if(r.display!='granted'){toast('⚠ Разрешите уведомления в настройках телефона');return}}catch(e){toast('⚠ '+e.message);return}}else if(window.Notification&&Notification.permission=='default')await Notification.requestPermission();
+S.notif=1;save();schedN();toast('🔔 Уведомления включены');render()}
+async function testN(){if(NAT){try{const r=await LN.requestPermissions();if(r.display!='granted')return toast('⚠ Нет разрешения на уведомления');await LN.schedule({notifications:[{id:999999,title:'Планнер',body:'Тестовое уведомление работает',schedule:{at:new Date(Date.now()+3000)}}]});toast('Придёт через 3 секунды — сверните приложение')}catch(e){toast('⚠ '+e.message)}}else{if(window.Notification&&Notification.permission=='default')await Notification.requestPermission();note('🔔 Проверка уведомления')}}
+async function shareF(k,n){try{const b=await fget(k),{Filesystem,Share}=Capacitor.Plugins,data=await new Promise(r=>{const f=new FileReader;f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(b)}),w=await Filesystem.writeFile({path:n,data,directory:'CACHE'});await Share.share({title:n,url:w.uri})}catch(e){toast('⚠ '+(e.message||e))}}
+function loadW(){const D=[];for(let i=0;i<7;i++){const d=new Date(Date.now()+i*864e5),k=ymd(d),m=dayEv(k).reduce((s,e)=>s+(new Date(e.e)-new Date(e.s))/6e4,0),h=S.hw.filter(x=>x.st!='done'&&x.due&&x.due.startsWith(k)).length;D.push({k,d,m,h})}
+const best=[...D.slice(1)].sort((a,b)=>a.m-b.m)[0],mx=Math.max(...D.map(x=>x.m+x.h*60),60),dn=x=>DAYS[(x.d.getDay()+6)%7];
+return`<div class="card"><b>⚖️ Нагрузка на неделю</b><div class="row" style="align-items:flex-end;height:70px;margin:8px 0">${D.map(x=>`<div style="flex:1;text-align:center"><div style="height:${Math.max(4,(x.m+x.h*60)/mx*50)}px;background:${x.h?'var(--wa)':'var(--ac)'};border-radius:5px"></div><div class="mu" style="font-size:11px">${dn(x)}</div></div>`).join('')}</div><div class="mu">Свободнее всего: ${dn(best)} ${best.k.slice(8)}.${best.k.slice(5,7)} — хороший день для ДЗ. Оранжевые столбики — есть дедлайны.</div></div>`}
+const _ex2=extra;extra=()=>_ex2()+loadW();
+/* ===== v5: android polish ===== */
+document.addEventListener('beforeinput',e=>{const c=e.target;if(!c.classList?.contains('ce'))return;const n=NN();if(!n)return;const i=+c.dataset.b,b=n.blocks[i];
+if(e.inputType=='insertParagraph'){e.preventDefault();n.blocks.splice(i+1,0,{t:['ul','td'].includes(b.t)?b.t:'t',x:'',c:0,l:b.l||0});save();render();foc(i+1)}
+else if(e.inputType=='deleteContentBackward'&&!c.textContent&&n.blocks.length>1){e.preventDefault();n.blocks.splice(i,1);save();render();foc(Math.max(0,i-1))}},true);
+async function fscan(k,n){if(!await ask('Сделать чёрно-белый «скан» (выше контраст)? Оригинал будет заменён.'))return;try{const b=await fget(k),im=await createImageBitmap(b),c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.filter='grayscale(1) contrast(1.6) brightness(1.1)';x.drawImage(im,0,0);await fput(k,await new Promise(r=>c.toBlob(r,'image/jpeg',.85)));toast('✓ Готово');$('#vw')?.remove();viewF(k,n)}catch(e){toast('⚠ '+(e.message||e))}}
+async function autoUpd(){if(!S.icsUrl||Date.now()-(S.icsAt||0)<216e5)return;try{const r=await fetch(S.icsUrl),ev=parseICS(await r.text());if(ev.length){S.events=ev;S.icsAt=Date.now();save();render()}}catch(e){}}
+try{navigator.storage?.persist?.()}catch(e){}
+if(NAT){const A=Capacitor.Plugins.App;A&&A.addListener('backButton',()=>{const m=document.querySelector('[data-k="0"]');if(m){m.click();return}if($('#vw')){$('#vw').remove();return}
+if(ui.lp)ui.lp=false;else if(ui.ed)ui.ed=null;else if(ui.form)ui.form=false;else if(ui.hwo)ui.hwo=null;else if(ui.note){const n=NN();ui.note=n&&n.p&&S.notes.some(x=>x.id==n.p)?n.p:null}else if(ui.tab=='files'||ui.tab=='tpl')ui.tab='more';else if(ui.tab!='home')ui.tab='home';else{A.exitApp();return}render()});
+document.addEventListener('click',e=>{if(!S.notif||!e.target.closest('[data-a="pomo"]'))return;setTimeout(()=>{ui.pomo?LN.schedule({notifications:[{id:777777,title:'🍅 Фокус окончен',body:'Перерыв 5 минут',schedule:{at:new Date(ui.pomo.end),allowWhileIdle:true}}]}).catch(()=>{}):LN.cancel({notifications:[{id:777777}]}).catch(()=>{})},60)})}
+autoUpd();
+schedN();
 render();
 </script></body></html>
+
+
+
