@@ -1,1 +1,1 @@
-{"appId":"com.planner.student","appName":"Планнер","webDir":"www","plugins":{"CapacitorHttp":{"enabled":true}}}
+{"appId":"com.planner.mobile","appName":"Планнер","webDir":"www","plugins":{"CapacitorHttp":{"enabled":true}}}
