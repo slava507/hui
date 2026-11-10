@@ -1060,12 +1060,12 @@ render();
 <script id="p2">
 (function(){
 const LS=document.createElement('style');LS.textContent=`nav button{font-size:10px;padding:4px 0;min-width:0;white-space:nowrap;overflow:visible}nav button b{font-size:19px}
-#psg{position:fixed;right:14px;bottom:176px;z-index:30;width:46px;height:46px;border-radius:50%;font-size:22px;padding:0;display:none;box-shadow:0 6px 20px #0008}
+#psg{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:12px;z-index:30;width:38px;height:38px;border-radius:50%;font-size:18px;padding:0;display:none;box-shadow:0 4px 14px #0008}
 #psh{position:fixed;left:10px;right:10px;bottom:90px;z-index:31;max-height:70vh;overflow:auto;background:#14172bf2;border:1px solid #ffffff22;border-radius:22px;padding:14px;display:none;backdrop-filter:blur(18px)}
 #psh .r{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}#psh input[type=text]{flex:1;min-width:0}
 .hmg{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin:8px 0}.hmg i{aspect-ratio:1;border-radius:4px;background:#ffffff12;display:block;min-width:0}
 .fcol{display:flex;gap:6px;flex-wrap:wrap}.fcol span{font-size:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#ffffff12}.fcol span.lk{filter:grayscale(1) brightness(.5)}
-body.rd .ce,body.rd .ce3{font-size:18px;line-height:1.7}body.rd .nadd,body.rd .nx,body.rd [data-a^="bm:"]{display:none!important}`;
+body.rd .dock,body.rd .dh,body.rd [data-a^="bm:"],body.rd .nadd{display:none!important}body.rd .nadd,body.rd .nx,body.rd [data-a^="bm:"]{display:none!important}`;
 document.head.appendChild(LS);
 /* ---- огонёк: дни → недели → месяцы ---- */
 const FL=[['✨',0,'#ffd36b','Искра'],['🕯️',0,'#ffb347','Свеча'],['🔥',0,'#ff9f43','Огонёк'],['🔥',-18,'#ff6b35','Пламя'],['🔥',38,'#ffd23f','Золотой'],['🔥',150,'#3ddc97','Изумрудный'],['🔥',200,'#4da3ff','Синий'],
@@ -1091,40 +1091,47 @@ const B=document.createElement('button');B.id='psg';B.textContent='⚙️';docum
 const P=document.createElement('div');P.id='psh';document.body.appendChild(P);
 let lp=null;document.addEventListener('focusin',e=>{const c=e.target.closest?.('.ce,.ce3');if(c)lp=c.dataset.p??c.dataset.b});
 function desc(id){const r=new Set(),q=[String(id)];while(q.length){const c=q.pop();S.notes.forEach(n=>{if(n.p&&String(n.p)==c&&!r.has(String(n.id))){r.add(String(n.id));q.push(String(n.id))}})}return r}
-function panel(){const tr=S.trash||[];P.innerHTML=`<div class="row sp"><b>Инструменты заметок</b><button class="g sm" id="pc">✕</button></div>
-<div class="r"><button class="g" id="pu">↶ Отмена</button><button class="g" id="pr">↷ Повтор</button><button class="g" id="prd">${document.body.classList.contains('rd')?'✏️ Редактировать':'📖 Режим чтения'}</button></div>
+function trH(){const tr=S.trash||[];return tr.length?tr.slice().reverse().map((x,i)=>`<div class="r"><span style="flex:1">${x.k=='n'?'📝':'📚'} ${esc(x.it.title||'Без названия')}</span><button class="g sm" data-ri="${tr.length-1-i}">Вернуть</button></div>`).join('')+'<button class="g" id="pe">Очистить корзину</button>':'<div class="mu">Пусто</div>'}
+function panel(){const pg=ui.note&&ui.tab=='notes';
+if(!pg)P.innerHTML=`<div class="row sp"><b>Заметки</b><button class="g sm" id="pc">✕</button></div>
+<label class="r"><input type="checkbox" id="pfl" ${S.hFil?'':'checked'}>Показывать фильтры (Главные, Подстраницы…)</label>
+<label class="r"><input type="checkbox" id="pim" ${S.hImp?'':'checked'}>Показывать импорт и экспорт Notion</label>
+<b>🗑 Корзина (30 дней)</b>${trH()}`;
+else P.innerHTML=`<div class="row sp"><b>Эта страница</b><button class="g sm" id="pc">✕</button></div>
+<div class="r"><button class="g" id="pu">↶ Отмена</button><button class="g" id="pr">↷ Повтор</button><button class="g" id="prd">${document.body.classList.contains('rd')?'✏️ Редактировать':'📖 Чтение'}</button></div>
 <div class="r"><input type="text" id="pq" placeholder="Поиск в заметке"><button class="g" id="pf">Найти</button></div>
-<div class="r"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pen" ${S.enterNew===false?'':'checked'}>Enter создаёт новый блок (выкл — перенос строки, двойной Enter выходит из блока)</label></div>
-<div class="r"><b style="width:100%">Блок под курсором</b><button class="g" id="bdup">⧉ Копия</button><button class="g" id="bup">↑ Выше</button><button class="g" id="bdn">↓ Ниже</button></div>
-${ui.note?`<div class="r"><b style="width:100%">Страница</b><button class="g" id="pmain">Сделать главной</button><select id="ppar"><option value="">Сделать подстраницей…</option>${S.notes.filter(n=>n.id!=ui.note&&!desc(ui.note).has(String(n.id))).map(n=>`<option value="${n.id}">${esc(n.title||'Без названия')}</option>`).join('')}</select></div>`:''}
-<div class="r"><button class="g" id="psel">☑️ Выбор блоков</button><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pof" ${S.nFav?'checked':''}>только избранные</label></div>
-<div class="r"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pom" ${S.nMain?'checked':''}>Список заметок: только главные страницы</label></div>
-<b>🗑 Корзина (30 дней)</b>${tr.length?tr.slice().reverse().map((x,i)=>`<div class="r"><span style="flex:1">${x.k=='n'?'📝':'📚'} ${esc(x.it.title||'Без названия')}</span><button class="g sm" data-ri="${tr.length-1-i}">Вернуть</button></div>`).join('')+'<button class="g" id="pe">Очистить корзину</button>':'<div class="mu">Пусто</div>'}`;
-P.querySelector('#pc').onclick=()=>P.style.display='none';P.querySelector('#pu').onclick=()=>undo(-1);P.querySelector('#pr').onclick=()=>undo(1);
-P.querySelector('#prd').onclick=()=>{document.body.classList.toggle('rd');apply();panel()};
-P.querySelector('#pf').onclick=()=>{const q=P.querySelector('#pq').value;if(q&&!window.find(q,false,false,true))toast('Не найдено')};
-P.querySelector('#pen').onchange=e=>{S.enterNew=e.target.checked;save()};
+<label class="r"><input type="checkbox" id="pen" ${S.enterNew===false?'':'checked'}>Enter создаёт новый блок <span class="mu">(выкл — Enter переносит строку, Shift+Enter создаёт блок)</span></label>
+<div class="r"><b style="width:100%">Блок под курсором</b><button class="g" id="bdup">⧉ Копия</button><button class="g" id="bup">↑</button><button class="g" id="bdn">↓</button><button class="g" id="psel">☑️ Выбор</button></div>
+<div class="r"><button class="g" id="pmain">Сделать главной</button><select id="ppar"><option value="">Сделать подстраницей…</option>${S.notes.filter(n=>n.id!=ui.note&&!desc(ui.note).has(String(n.id))).map(n=>`<option value="${n.id}">${esc(n.title||'Без названия')}</option>`).join('')}</select></div>`;
+const q=s=>P.querySelector(s),cur=()=>S.notes.find(n=>n.id==ui.note),X=()=>{P.style.display='none'};
+q('#pc').onclick=X;
+if(!pg){q('#pfl').onchange=e=>{S.hFil=!e.target.checked;save();upd()};q('#pim').onchange=e=>{S.hImp=!e.target.checked;save();upd()};
 P.querySelectorAll('[data-ri]').forEach(b=>b.onclick=()=>{const x=S.trash.splice(+b.dataset.ri,1)[0];(x.k=='n'?S.notes:S.hw).push(x.it);save();render();panel();toast('Возвращено')});
-P.querySelector('#psel').onclick=()=>{P.style.display='none';window.selMode(true)};P.querySelector('#pof').onchange=e=>{S.nFav=e.target.checked;save();render()};
-P.querySelector('#pom').onchange=e=>{S.nMain=e.target.checked;save();render()};
-const cur=()=>S.notes.find(n=>n.id==ui.note);
-const bo=f=>{if(!lp||!ui.note)return toast('Сначала нажми в нужный блок');const[arr,i]=ga(NN(),lp);if(!arr[i])return;f(arr,i);save();render();P.style.display='none'};
-P.querySelector('#bdup').onclick=()=>bo((a,i)=>a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))));
-P.querySelector('#bup').onclick=()=>bo((a,i)=>{if(i>0)[a[i-1],a[i]]=[a[i],a[i-1]]});
-P.querySelector('#bdn').onclick=()=>bo((a,i)=>{if(i<a.length-1)[a[i+1],a[i]]=[a[i],a[i+1]]});
-const pm=P.querySelector('#pmain');if(pm)pm.onclick=()=>{const n=cur();if(n){n.p='';save();render();P.style.display='none';toast('Теперь это главная страница')}};
-const pp=P.querySelector('#ppar');if(pp)pp.onchange=()=>{const n=cur(),t=S.notes.find(x=>x.id==pp.value);if(n&&t){n.p=t.id;save();render();P.style.display='none';toast('Теперь это подстраница «'+(t.title||'Без названия')+'»')}};
-const pe=P.querySelector('#pe');if(pe)pe.onclick=()=>{S.trash=[];save();panel()}}
+const pe=q('#pe');if(pe)pe.onclick=()=>{S.trash=[];save();panel()};return}
+q('#pu').onclick=()=>undo(-1);q('#pr').onclick=()=>undo(1);
+q('#prd').onclick=()=>{document.body.classList.toggle('rd');apply();X()};
+q('#pf').onclick=()=>{const t=q('#pq').value;if(t&&!window.find(t,false,false,true))toast('Не найдено')};
+q('#pen').onchange=e=>{S.enterNew=e.target.checked;save()};
+q('#psel').onclick=()=>{X();window.selMode(true)};
+const bo=f=>{if(!lp)return toast('Сначала нажми в нужный блок');const[arr,i]=ga(NN(),lp);if(!arr[i])return;f(arr,i);save();render();X()};
+q('#bdup').onclick=()=>bo((a,i)=>a.splice(i+1,0,JSON.parse(JSON.stringify(a[i]))));
+q('#bup').onclick=()=>bo((a,i)=>{if(i>0)[a[i-1],a[i]]=[a[i],a[i-1]]});
+q('#bdn').onclick=()=>bo((a,i)=>{if(i<a.length-1)[a[i+1],a[i]]=[a[i],a[i+1]]});
+q('#pmain').onclick=()=>{const n=cur();if(n){n.p='';save();render();X();toast('Теперь это главная страница')}};
+q('#ppar').onchange=()=>{const n=cur(),t=S.notes.find(x=>x.id==q('#ppar').value);if(n&&t){n.p=t.id;save();render();X();toast('Теперь это подстраница «'+(t.title||'Без названия')+'»')}}}
 B.onclick=()=>{if(P.style.display=='block')P.style.display='none';else{panel();P.style.display='block'}};
 function apply(){const rd=document.body.classList.contains('rd');document.querySelectorAll('.ce,.ce3').forEach(e=>e.contentEditable=rd?'false':'true')}
-function upd(){const on=ui.tab=='notes';B.style.display=on?'block':'none';if(!on){P.style.display='none';document.body.classList.remove('rd')}apply();document.querySelectorAll('#ppath').forEach(x=>x.remove());const app=document.querySelector('#app');if(on&&ui.note&&app){const ch=[];let n=S.notes.find(x=>x.id==ui.note),g=0;while(n&&n.p&&g++<20){n=S.notes.find(x=>x.id==n.p);if(n)ch.unshift(n)}if(ch.length){const d=document.createElement('div');d.id='ppath';d.className='mu';d.style.cssText='margin:4px 0 8px;font-size:13px';d.innerHTML='Заметки › '+ch.map(x=>`<a data-a="open:${x.id}" style="color:var(--ac)">${esc(x.title||'Без названия')}</a>`).join(' › ')+' › '+esc((S.notes.find(x=>x.id==ui.note)||{}).title||'Без названия');app.prepend(d)}}}
+function upd(){const on=ui.tab=='notes';B.style.display=on&&ui.note?'block':'none';if(!on||!ui.note){document.body.classList.remove('rd')}if(!on)P.style.display='none';apply();
+document.querySelectorAll('#ppath').forEach(x=>x.remove());const app=document.querySelector('#app');
+if(on&&!ui.note&&app){const h=app.querySelector('h1');if(h&&!document.getElementById('gl')){const w=document.createElement('span');w.style.cssText='display:flex;align-items:center;gap:10px';h.parentNode.insertBefore(w,h);w.appendChild(h);const g=document.createElement('button');g.id='gl';g.className='g sm';g.textContent='⚙️';g.onclick=()=>{if(P.style.display=='block')P.style.display='none';else{panel();P.style.display='block'}};w.appendChild(g)}
+const c=app.querySelector('[data-a^="ncat:"]');if(c)c.parentNode.style.display=S.hFil?'none':'';const z=document.getElementById('nzip');if(z){const k=z.closest('.card');if(k)k.style.display=S.hImp?'none':''}}
+if(on&&ui.note&&app){const ch=[];let n=S.notes.find(x=>x.id==ui.note),g=0;while(n&&n.p&&g++<20){n=S.notes.find(x=>x.id==n.p);if(n)ch.unshift(n)}if(ch.length){const d=document.createElement('div');d.id='ppath';d.className='mu';d.style.cssText='margin:4px 0 8px;font-size:13px';d.innerHTML='Заметки › '+ch.map(x=>`<a data-a="open:${x.id}" style="color:var(--ac)">${esc(x.title||'Без названия')}</a>`).join(' › ')+' › '+esc((S.notes.find(x=>x.id==ui.note)||{}).title||'Без названия');app.prepend(d)}}}
 const _r=render;render=function(){const r=_r.apply(this,arguments);upd();return r};upd();
 /* ---- Enter: новый блок или перенос строки ---- */
-window.addEventListener('keydown',e=>{const c=e.target;if(S.enterNew!==false||!c.classList?.contains('ce')&&!c.classList?.contains('ce3')||e.key!='Enter'||e.shiftKey)return;
-if(/\n$/.test(c.innerText)||/<br>\s*$/.test(c.innerHTML)&&c.innerText.trim()==''){c.innerHTML=c.innerHTML.replace(/(<br\s*\/?>\s*)+$/,'');c.dispatchEvent(new Event('input',{bubbles:true}));return}
+window.addEventListener('keydown',e=>{const c=e.target;if(window.__pass||S.enterNew!==false||e.key!='Enter'||!(c.classList?.contains('ce')||c.classList?.contains('ce3')))return;
+if(e.shiftKey){e.stopPropagation();e.preventDefault();window.__pass=1;c.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));window.__pass=0;return}
 e.stopPropagation();e.preventDefault();document.execCommand('insertLineBreak');c.dispatchEvent(new Event('input',{bubbles:true}))},true);
 
-const _nl=nlist;nlist=function(){if(!S.nMain&&!S.nFav)return _nl();const all=S.notes;S.notes=all.filter(n=>(!S.nMain||!n.p||!all.some(m=>m.id==n.p))&&(!S.nFav||n.fav));try{return _nl()}finally{S.notes=all}};
 const _hv=hwView;hwView=function(){const h=_hv.apply(this,arguments);if(typeof h!='string')return h;const od=S.hw.filter(x=>x.st!='done'&&x.due&&new Date(x.due)<new Date());
 return(od.length?`<div class="card" style="border-color:#ff5e7e"><b>⏰ Просрочено: ${od.length}</b>${od.slice(0,8).map(x=>`<div class="row sp" style="margin:6px 0"><span style="flex:1">${esc(x.title)} <i class="mu">${esc(x.sub||'')}</i></span><button class="g sm" data-late="${x.id}">На завтра</button></div>`).join('')}</div>`:'')+h};
 document.addEventListener('click',e=>{const b=e.target.closest?.('[data-late]');if(!b)return;const x=S.hw.find(z=>z.id==b.dataset.late);if(!x)return;const d=new Date(Date.now()+864e5);x.due=ymd(d)+(x.due||'T20:00').slice(10);save();render();toast('Перенесено на завтра')},true);
@@ -1132,21 +1139,25 @@ document.addEventListener('click',e=>{const b=e.target.closest?.('[data-late]');
 </script>
 <script id="p3">
 (function(){
-const st=document.createElement('style');st.textContent=`.dh{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:4px 8px;opacity:.55;font-size:18px;align-self:flex-start}body.rd .dh,body.sel .dh{display:none}.dgo{outline:2px dashed var(--ac);border-radius:8px}.dsel{background:#7c6cff44;border-radius:8px;outline:2px solid #7c6cff}#psb{position:fixed;left:10px;right:10px;bottom:96px;z-index:32;display:none;gap:8px;flex-wrap:wrap;padding:10px;border-radius:20px;background:#14172bf2;border:1px solid #ffffff22;align-items:center}`;
+const st=document.createElement('style');st.textContent=`.dh{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:6px 10px;opacity:.35;font-size:16px;align-self:flex-start;transition:opacity .15s}.dh:active{opacity:.9}body.rd .dh,body.sel .dh{display:none}.blk [data-a^="bm:"]{display:none}.dragging{pointer-events:none;position:relative;z-index:50;background:#2a2f55ee;border-radius:12px;box-shadow:0 10px 30px #000a}.dbf{box-shadow:0 -3px 0 var(--ac)}.daf{box-shadow:0 3px 0 var(--ac)}.dsel{background:#7c6cff44;border-radius:8px;outline:2px solid #7c6cff}#psb{position:fixed;left:10px;right:10px;bottom:96px;z-index:32;display:none;gap:8px;flex-wrap:wrap;padding:10px;border-radius:20px;background:#14172bf2;border:1px solid #ffffff22;align-items:center}.npg .ce,.npg .ce3{font-size:16.5px!important;line-height:1.55;padding:3px 2px!important}.npg .blk{gap:2px;margin:0}.ce3:focus{background:none!important}.npg .h1{font-size:24px}.npg .h2{font-size:19px}`;
 document.head.appendChild(st);
 const po=e=>e.dataset.p??e.dataset.b;
 const cont=path=>{const k=String(path).split('.').map(Number);let b=NN().blocks[k[0]];for(let i=1;i<k.length;i++)b=b.ch[k[i]];return b.ch||(b.ch=[])};
-function move(p,t){const n=NN(),[a,i]=ga(n,p),b=a[i];if(!b)return;const x=t.p||t.add;if(x==p||String(x).startsWith(p+'.'))return toast('Нельзя перенести в себя');
-let dest,idx;if(t.add){dest=cont(t.add);idx=dest.length}else{const[d,j]=ga(n,t.p);dest=d;idx=j+1}
-a.splice(i,1);if(a===dest&&i<idx)idx--;dest.splice(idx,0,b);if(!a.length)a.push({t:'t',x:''});save();render()}
+function locate(arr,pre,b){for(let i=0;i<arr.length;i++){if(arr[i]===b)return pre+i;if(arr[i].ch){const r=locate(arr[i].ch,pre+i+'.',b);if(r)return r}}}
+function move(p,t,y0){const n=NN(),[a,i]=ga(n,p),b=a[i];if(!b)return;const x=t.p||t.add;if(x==p||String(x).startsWith(p+'.'))return toast('Нельзя перенести в себя');
+let dest,idx;if(t.add){dest=cont(t.add);idx=dest.length}else{const[d,j]=ga(n,t.p);dest=d;idx=t.aft?j+1:j}
+a.splice(i,1);if(a===dest&&i<idx)idx--;dest.splice(idx,0,b);if(!a.length)a.push({t:'t',x:''});save();render();
+if(y0!=null&&document.body.animate!==undefined){const np=locate(n.blocks,'',b),el=np&&document.querySelector(`[data-b="${np}"],[data-p="${np}"]`),r=el&&(el.closest('.blk,.cob')||el);if(r)r.animate([{transform:`translateY(${y0-r.getBoundingClientRect().top}px)`,boxShadow:'0 8px 24px #0009'},{transform:'none',boxShadow:'0 0 0 #0000'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'})}}
 window.moveBlock=move;
-let dr=null;const clr=()=>document.querySelectorAll('.dgo').forEach(x=>x.classList.remove('dgo'));
-document.addEventListener('pointerdown',e=>{const h=e.target.closest?.('.dh');if(!h)return;e.preventDefault();dr={p:h.dataset.p,t:null};h.setPointerCapture?.(e.pointerId)},true);
-document.addEventListener('pointermove',e=>{if(!dr)return;e.preventDefault();clr();const el=document.elementFromPoint(e.clientX,e.clientY),c=el?.closest?.('.ce,.ce3'),n=el?.closest?.('[data-a^="nba:"]');dr.t=null;
-if(n){dr.t={add:n.dataset.a.slice(4)};n.classList.add('dgo')}else if(c&&po(c)!=dr.p){dr.t={p:po(c)};(c.closest('.blk,.cob')||c).classList.add('dgo')}
-if(e.clientY<90)scrollBy(0,-14);else if(e.clientY>innerHeight-200)scrollBy(0,14)},true);
-document.addEventListener('pointerup',()=>{if(!dr)return;clr();const d=dr;dr=null;if(d.t)move(d.p,d.t)},true);
-document.addEventListener('pointercancel',()=>{dr=null;clr()},true);
+let dr=null,lt=0;const clr=()=>document.querySelectorAll('.dbf,.daf').forEach(x=>x.classList.remove('dbf','daf'));
+document.addEventListener('pointerdown',e=>{const h=e.target.closest?.('.dh');if(!h)return;e.preventDefault();dr={p:h.dataset.p,r:h.closest('.blk,.cob')||h.parentElement,y0:e.clientY,t:null,mv:0};try{h.setPointerCapture(e.pointerId)}catch(_){}},true);
+document.addEventListener('pointermove',e=>{if(!dr)return;e.preventDefault();const dy=e.clientY-dr.y0;if(!dr.mv){if(Math.abs(dy)<8)return;dr.mv=1;dr.r.classList.add('dragging');navigator.vibrate&&navigator.vibrate(8)}
+dr.r.style.transform=`translateY(${dy}px) scale(1.02)`;clr();dr.t=null;const el=document.elementFromPoint(Math.min(innerWidth*.35,160),e.clientY),n=el?.closest?.('[data-a^="nba:"]'),c=el?.closest?.('.ce,.ce3');
+if(n){dr.t={add:n.dataset.a.slice(4)};n.classList.add('dbf')}else if(c&&po(c)!=dr.p){const r=c.closest('.blk,.cob')||c,b=r.getBoundingClientRect(),aft=e.clientY>b.top+b.height/2;dr.t={p:po(c),aft};r.classList.add(aft?'daf':'dbf')}
+if(e.clientY<100)scrollBy(0,-12);else if(e.clientY>innerHeight-220)scrollBy(0,12)},true);
+document.addEventListener('pointerup',()=>{if(!dr)return;const d=dr;dr=null;clr();const y0=d.r.getBoundingClientRect().top;d.r.classList.remove('dragging');d.r.style.transform='';
+if(!d.mv){const now=Date.now();if(now-lt<350){lt=0;const m=d.r.querySelector('[data-a^="bm:"]');m&&m.click()}else lt=now;return}if(d.t)move(d.p,d.t,y0)},true);
+document.addEventListener('pointercancel',()=>{if(dr){dr.r.classList.remove('dragging');dr.r.style.transform=''}dr=null;clr()},true);
 /* выбор нескольких блоков */
 const sel=new Set(),isSel=()=>document.body.classList.contains('sel');
 function bar(){let b=document.getElementById('psb');if(!b){b=document.createElement('div');b.id='psb';document.body.appendChild(b)}b.style.display=isSel()?'flex':'none';if(!isSel())return;
@@ -1212,8 +1223,7 @@ if(b=c('[data-a^="lnks:"]')){e.stopPropagation();const n=NN();if(n){n.blocks.pus
 },true);
 /* ---- обёртки ---- */
 const _r=render;render=function(){const t=ui.tab;if(t=='subj'||t=='sr'){ui.tab='more';try{_r.apply(this,arguments)}finally{ui.tab=t}document.querySelector('#app').innerHTML=t=='sr'?srV():ui.sj?sjPage(ui.sj):sjList();return}
-const r=_r.apply(this,arguments);if(ui.tab=='sched'&&!ui.wv&&!ui.ed)document.querySelectorAll('.cal .d').forEach((el,i)=>{const L=load(`${ui.cy}-${String(ui.cm+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`);if(L)el.style.boxShadow=`inset 0 -4px 0 ${LC(L)}`});return r};
-const _wv=weekV;weekV=function(){const h=_wv.apply(this,arguments);if(typeof h!='string')return h;const d=new Date(ui.sel+'T00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);let b='';for(let i=0;i<7;i++){const L=load(ymd(d));b+=`<div><i style="background:${LC(L)}"></i>${DAYS[i]} ${L}</div>`;d.setDate(d.getDate()+1)}return h.replace('</div>','</div><div class="ld">'+b+'</div>')};
+return _r.apply(this,arguments)};
 const _mo=more;more=function(){const h=_mo.apply(this,arguments);return typeof h!='string'?h:h.replace('<h1>Ещё</h1>','<h1>Ещё</h1><div class="row" style="margin:8px 0"><button class="g" style="flex:1" data-a="tab:subj">🎓 Предметы</button><button class="g" style="flex:1" data-a="tab:sr">🧠 Повторение</button></div>')};
 const _qr=qRes;qRes=function(){const h=_qr.apply(this,arguments),z=ui.qz;return z&&z.ms?h+`<button style="width:100%;margin-top:10px" data-qerr="1">🛠 Работа над ошибками (${z.ms})</button>`:h};
 const _rh=resH;resH=function(){const base=_rh.apply(this,arguments),q=ui.q.trim().toLowerCase();if(!q)return base;const m=s=>String(s||'').toLowerCase().includes(q);
