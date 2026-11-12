@@ -1481,6 +1481,107 @@ if(ui.tab=='notes'&&ui.note&&app){const n=cn();if(n){const E=echo(n);if(E.length
 const _mo=more;more=function(){const h=_mo.apply(this,arguments);return typeof h!='string'?h:h.replace('<h1>Ещё</h1>','<h1>Ещё</h1><div class="card"><b>🧠 Мозг</b><div class="row wrap" style="margin-top:8px"><button class="g" data-a="tab:graph">🕸 Граф</button><button class="g" data-a="tab:sparks">✨ Копилка</button><button class="g" data-a="wkissue">📰 Выпуск недели</button></div></div>')};
 })();
 </script>
+<script id="p8">
+(function(){
+const css=document.createElement('style');css.textContent=`
+body[data-nav=top] nav{bottom:auto!important;top:calc(env(safe-area-inset-top,0px) + 8px)!important}body[data-nav=top] #app{padding-top:96px!important;padding-bottom:40px!important}body[data-nav=top] .dock{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)!important}
+body[data-nav=side] nav{left:8px!important;right:auto!important;top:50%!important;bottom:auto!important;width:92px;transform:translate(-125%,-50%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:70}body[data-nav=side] nav.open{transform:translate(0,-50%)}body[data-nav=side] nav #nav{flex-direction:column}body[data-nav=side] #app{padding-bottom:40px!important}body[data-nav=side] .dock{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)!important}
+#nvh{display:none}body[data-nav=side] #nvh{display:block;position:fixed;left:0;top:50%;width:12px;height:70px;transform:translateY(-50%);border-radius:0 10px 10px 0;background:var(--ac);opacity:.55;z-index:69}body[data-fab=off] #fab{display:none!important}
+.seg{display:flex;gap:4px;background:#ffffff10;border-radius:16px;padding:4px;margin:0 0 14px}.seg button{flex:1;background:none;box-shadow:none;border-radius:12px;font-size:13px;padding:9px 4px;color:var(--mu)}.seg button.on{background:var(--ac);color:#fff}
+.app{display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--bd);cursor:pointer}.app:last-child{border:0}.app .ai{font-size:24px;width:38px;height:38px;border-radius:12px;background:#8f7bff22;display:flex;align-items:center;justify-content:center}.app div{flex:1}.app b{font-size:15px}.app .mu{font-size:12px}
+.hw{position:relative}.hw.ed{border:1.5px dashed #8f7bff77;border-radius:20px;padding:8px;margin:10px 0}.hw.ed>*:not(.whd){pointer-events:none;opacity:.8}.whd{display:flex;align-items:center;gap:8px;padding:2px 4px 8px}.whd b{flex:1;font-size:13px}.wh{font-size:22px;padding:4px 10px;touch-action:none;cursor:grab;user-select:none}.hw.dragging{pointer-events:none;z-index:50;background:#2a2f55ee;box-shadow:0 12px 30px #000a;border-radius:20px}.hw.wb{box-shadow:0 -3px 0 var(--ac)}.hw.wa{box-shadow:0 3px 0 var(--ac)}
+.gr{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}.gr span{flex:1}`;document.head.appendChild(css);
+const _home=home,_more=more,_sched=sched,_hv=hwView;
+const WR=[['core','🎯','Сейчас · одна строка'],['hero','⏱','Пара сейчас'],['fab','＋','Кнопки «＋ДЗ» и «＋Заметка»'],['today','📅','Сегодня'],['nexthw','📚','Ближайшее ДЗ'],['wid','🧩','Окна, экзамен, помодоро, завтра, прогресс'],['hwsum','📊','Сводка ДЗ'],['trk','🔥','Трекер сегодня'],['boards','🗂️','Недавние доски'],['sr','🧠','Повторение карточек'],['spark','✨','Искра'],['apps','🚀','Быстрые разделы'],['issue','📰','Выпуск недели']],
+DEF=['core','hero','fab','today','nexthw','wid','hwsum'];
+if(!Array.isArray(S.hcfg))S.hcfg=WR.map(w=>({id:w[0],on:DEF.includes(w[0])}));WR.forEach(w=>{if(!S.hcfg.find(c=>c.id==w[0]))S.hcfg.push({id:w[0],on:false})});if(!Array.isArray(S.mcfg))S.mcfg=[];
+const wt=id=>WR.find(w=>w[0]==id);
+function parts(){const n=new Date(),evs=dayEv(ymd(n)),ns=nowS(),full=_home.apply(this,arguments),iC=full.indexOf('<div class="card" id="core">'),iH=full.indexOf('<div class="card hero"'),iF=full.indexOf('<div class="fab">'),iT=full.indexOf('<h2>Сегодня</h2>'),iN=full.indexOf('<h2>Ближайшее ДЗ</h2>'),iS=full.lastIndexOf('<div class="card row sp"><div><b>ДЗ</b>');let wx='';try{wx=widgets(evs,ns)+extra()}catch(e){}let iW=wx?full.indexOf(wx,iN):-1;if(iW<0)iW=iS;
+return{hdr:full.slice(0,iC>=0?iC:iH),core:iC>=0?full.slice(iC,iH):'',hero:full.slice(iH,iF),fab:full.slice(iF,iT),today:full.slice(iT,iN),nexthw:full.slice(iN,iW),wid:full.slice(iW,iS),hwsum:full.slice(iS)}}
+function nw(id){const td=ymd(new Date());if(id=='trk'&&S.trk){const R=req(td),d=R.filter(x=>isDone(td,x.id)).length,p=R.length?d/R.length*100:0;return`<div class="card" data-a="tab:trk"><div class="row sp"><b>🔥 Привычки сегодня</b><span>${d}/${R.length} · ${window.flameOf?flameOf(streak()):''} ${streak()} дн.</span></div><div class="bar" style="background:var(--bd)"><i style="width:${p}%;background:var(--ok)"></i></div></div>`}
+if(id=='boards'){const L=(S.boards||[]).slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,3);return`<h2>Доски</h2>${L.map(b=>`<div class="card" data-bo="${b.id}">🗂️ <b>${esc(b.n)}</b></div>`).join('')||'<div class="card mu">Досок пока нет</div>'}`}
+if(id=='sr'){const c=(S.decks||[]).reduce((s,d)=>s+d.cards.filter(k=>!k.sr||k.sr.due<=Date.now()).length,0);return`<div class="card row sp" data-a="tab:sr"><div><b>🧠 Повторение</b><div class="mu">К повторению: ${c}</div></div><span class="mu">›</span></div>`}
+if(id=='spark'){const s=S.sparks||[];return`<div class="card" data-a="tab:sparks"><div class="mu">✨ Искра</div>${s.length?esc(s[Math.floor(Date.now()/864e5)%s.length].t):'<span class="mu">Копилка пуста</span>'}</div>`}
+if(id=='apps')return`<div class="card"><div class="row wrap">${[['sched','📅','Учёба'],['trk','🔥','Трекер'],['notes','📝','Заметки'],['boards','🗂️','Доски'],['cards','🃏','Карточки'],['quiz','🧪','Тесты'],['wk','🏋️','Тренировки'],['graph','🕸','Граф']].map(a=>`<button class="g" data-a="tab:${a[0]}">${a[1]} ${a[2]}</button>`).join('')}</div></div>`;
+if(id=='issue')return`<div class="card row sp" data-a="wkissue"><div><b>📰 Выпуск недели</b><div class="mu">Собрать итоги недели</div></div><span class="mu">›</span></div>`;return''}
+const wbox=(id,html,ed)=>`<div class="hw${ed?' ed':''}" data-w="${id}">${ed?`<div class="whd"><span class="wh" data-wh="${id}">⠿</span><b>${wt(id)[1]} ${wt(id)[2]}</b><button class="chip" data-wx="${id}">✕</button></div>`:''}${html}</div>`;
+const wh=(id,P)=>P&&P[id]!=null?P[id]:nw(id);
+home=function(){const P=parts.apply(this,arguments),ed=!!ui.he;let h=P.hdr;
+if(ed)h+=`<div class="card" style="border-color:#8f7bff"><b>✏️ Правка главной</b><div class="mu" style="margin:4px 0 8px">Тяни ⠿, чтобы переставить. ✕ скрывает виджет.</div><button data-he="0">Готово</button></div>`;
+S.hcfg.filter(c=>c.on).forEach(c=>{const x=wh(c.id,P);if(x||ed)h+=wbox(c.id,x||'<div class="card mu">Пусто</div>',ed)});
+if(ed){const off=S.hcfg.filter(c=>!c.on);h+=`<div class="card"><b>＋ Добавить виджет</b><div class="row wrap" style="margin-top:8px">${off.map(c=>`<button class="chip" data-wa="${c.id}">${wt(c.id)[1]} ${wt(c.id)[2]}</button>`).join('')||'<span class="mu">Все виджеты на месте</span>'}</div></div>`}
+else h+=`<div style="text-align:center;margin:18px 0 6px"><button class="g sm" data-he="1">✏️ Настроить главную</button></div>`;return h};
+/* перетаскивание виджетов */
+let wd=null;const wcl=()=>document.querySelectorAll('.wb,.wa').forEach(x=>x.classList.remove('wb','wa'));
+document.addEventListener('pointerdown',e=>{const h=e.target.closest?.('[data-wh]');if(!h)return;e.preventDefault();wd={id:h.dataset.wh,r:h.closest('.hw'),y0:e.clientY,mv:0,t:null};try{h.setPointerCapture(e.pointerId)}catch(_){}},true);
+document.addEventListener('pointermove',e=>{if(!wd)return;e.preventDefault();const dy=e.clientY-wd.y0;if(!wd.mv){if(Math.abs(dy)<6)return;wd.mv=1;wd.r.classList.add('dragging');navigator.vibrate&&navigator.vibrate(8)}wd.r.style.transform=`translateY(${dy}px) scale(1.02)`;wcl();wd.t=null;const el=document.elementFromPoint(innerWidth/2,e.clientY),r=el?.closest?.('.hw');if(r&&r.dataset.w!=wd.id){const b=r.getBoundingClientRect(),aft=e.clientY>b.top+b.height/2;wd.t={id:r.dataset.w,aft};r.classList.add(aft?'wa':'wb')}if(e.clientY<100)scrollBy(0,-12);else if(e.clientY>innerHeight-160)scrollBy(0,12)},true);
+document.addEventListener('pointerup',()=>{if(!wd)return;const d=wd;wd=null;wcl();const y0=d.r.getBoundingClientRect().top;d.r.classList.remove('dragging');d.r.style.transform='';if(d.mv&&d.t)moveW(d.id,d.t,y0)},true);document.addEventListener('pointercancel',()=>{if(wd){wd.r.classList.remove('dragging');wd.r.style.transform=''}wd=null;wcl()},true);
+function moveW(id,t,y0){const a=S.hcfg,i=a.findIndex(c=>c.id==id),c=a.splice(i,1)[0];let j=a.findIndex(x=>x.id==t.id);a.splice(t.aft?j+1:j,0,c);save();render();if(y0!=null){const r=document.querySelector(`.hw[data-w="${id}"]`);r&&r.animate([{transform:`translateY(${y0-r.getBoundingClientRect().top}px)`,boxShadow:'0 10px 24px #0009'},{transform:'none',boxShadow:'0 0 0 #0000'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'})}}
+window.moveW=moveW;
+/* Ещё */
+const G=[['Учёба',[['tab:subj','🎓','Предметы','Страницы предметов, пары, ДЗ, доски'],['tab:cards','🃏','Карточки','Колоды для заучивания'],['tab:sr','🧠','Повторение','Умное повторение карточек'],['tab:quiz','🧪','Тесты','Квизы и работа над ошибками'],['tab:tpl','📄','Шаблоны','Шаблоны документов'],['tab:files','📁','Файлы','Хранилище файлов']]],
+['Дела и тело',[['tab:dg','🎯','Цели и дневник','Цели, настроение, дневник'],['tab:wk','🏋️','Тренировки','Программы и подходы'],['tab:stat','📊','Статистика','Как идут дела'],['tab:rnd','🎲','Рандомайзер','Выбор наугад']]],
+['Творчество и мозг',[['tab:boards','🗂️','Доски','Бесконечное полотно'],['tab:graph','🕸','Граф связей','Как связаны заметки'],['tab:sparks','✨','Копилка искр','Фразы и образы'],['wkissue','📰','Выпуск недели','Итоги недели заметкой']]],
+['Вид и профиль',[['tab:profile','👤','Профиль','Имя, ФИО, группа, тема'],['tab:thm','🎨','Темы','Оформление'],['tab:shop','🛍','Магазин','Награды за серии'],['ntest','🔔','Проверить уведомление','Тест уведомлений']]]];
+const sec=(full,key)=>{const p=full.split('<h2>').find(x=>x.includes(key));return p?'<h2>'+p:''};
+function MP(){const f=_more.apply(this,arguments);return{prof:sec(f,'Профиль'),col:sec(f,'Цвета предметов'),exam:sec(f,'Экзамены и контрольные'),wid:sec(f,'Виджеты главной'),data:sec(f,'Данные')}}
+more=function(){const mw=S.mcfg.map(id=>{const x=nw(id);return x?wbox(id,x,false):''}).join('');return`<h1>Ещё</h1>`+G.map(([t,it])=>`<h2>${t}</h2><div class="card" style="padding:2px 14px">${it.map(([a,i,n,s])=>`<div class="app" data-a="${a}"><span class="ai">${i}</span><div><b>${n}</b><div class="mu">${s}</div></div><span class="mu">›</span></div>`).join('')}</div>`).join('')+(mw?'<h2>Виджеты</h2>'+mw:'')+`<div style="text-align:center;margin:22px 0 10px"><button class="g" id="mg">⚙️ Настройки интерфейса</button></div>`};
+const profV=()=>`<div class="row sp"><h1>Профиль</h1><button class="g sm" data-a="tab:more">‹</button></div>`+MP().prof.replace(/^<h2>[^<]*<\/h2>/,'');
+const st3V=()=>{const m=MP();return`<h1>Предметы и экзамены</h1><div class="card row sp" data-a="tab:subj"><div><b>🎓 Страницы предметов</b><div class="mu">Пары, ДЗ, заметки и доски по каждому предмету</div></div><span class="mu">›</span></div>${m.exam}${m.col}`};
+/* Учёба */
+const ST3=['sched','hw','study3'],SEG=[['sched','📅 Расписание'],['hw','📚 ДЗ'],['study3','🎓 Предметы']];
+sched=function(){let h=_sched.apply(this,arguments);if(typeof h=='string'&&S.hideIcs){const i=h.lastIndexOf('<div class="card" style="margin-top:10px"><b>Расписание</b>');if(i>0)h=h.slice(0,i)}return h};
+const HF=[['act','Активные'],['all','Все'],['todo','🔴 Не начато'],['prog','🟡 В процессе'],['done','🟢 Готово']];S.hfs=S.hfs||{act:1,all:1,todo:1,prog:1,done:1};ui.f='act';
+hwView=function(){const f0=ui.f,h0=S.hw;if(f0=='act'){S.hw=h0.filter(x=>x.st!='done');ui.f='all'}let h;try{h=_hv.apply(this,arguments)}finally{S.hw=h0;ui.f=f0}
+if(typeof h!='string')return h;const chips=`<div class="row wrap" style="margin:10px 0">${HF.filter(c=>S.hfs[c[0]]||ui.f==c[0]).map(([k,v])=>`<button class="chip${ui.f==k?' on':''}" data-a="f:${k}">${v}</button>`).join('')}</div>`;
+h=h.replace(/<div class="row wrap" style="margin:10px 0">[\s\S]*?<\/div>/,chips);return h+`<div style="text-align:center;margin:18px 0"><button class="g sm" data-hg="1">⚙️ Фильтры</button></div>`};
+/* настройки */
+function M(title,html){const m=document.createElement('div');m.className='bm';m.innerHTML=`<div><div class="row sp"><b>${title}</b><button class="g sm" data-gx="1">✕</button></div>${html}</div>`;document.body.appendChild(m);m.onclick=e=>{if(e.target===m)m.remove()};return m}
+let gm=null;
+function gfill(){if(!gm)return;const m=MP(),pos=S.navPos||'bottom';gm.querySelector('div').innerHTML=`<div class="row sp"><b>⚙️ Интерфейс</b><button class="g sm" data-gx="1">✕</button></div>
+<h2>Виджеты</h2>${S.hcfg.map(c=>`<div class="gr"><span>${wt(c.id)[1]} ${wt(c.id)[2]}</span><button class="chip${c.on?' on':''}" data-gh="${c.id}">Главная</button><button class="chip${S.mcfg.includes(c.id)?' on':''}" data-gm="${c.id}">Ещё</button></div>`).join('')}<button style="margin-top:10px" data-he="1">✏️ Править порядок на главной</button>
+<h2>Панель вкладок</h2><div class="row wrap">${[['bottom','⬇ Снизу'],['top','⬆ Сверху'],['side','⬅ Сбоку']].map(([k,v])=>`<button class="chip${pos==k?' on':''}" data-np="${k}">${v}</button>`).join('')}</div><div class="mu" style="margin-top:6px">${{bottom:'Всегда внизу.',top:'Всегда вверху.',side:'Прячется у края: потяни от левого края или нажми на полоску.'}[pos]}</div>
+<h2>Кнопки</h2><div class="row wrap"><button class="chip${S.fabOff?'':' on'}" data-fb="1">✦ Кнопка быстрых действий</button><button class="chip${S.hideIcs?'':' on'}" data-ics="1">📅 Панель загрузки .ics</button></div>${m.wid}${m.data}`}
+function gopen(){gm&&gm.remove();gm=M('⚙️ Интерфейс','');gfill()}
+document.addEventListener('click',e=>{const t=e.target,c=s=>t.closest?.(s);let b;
+if(c('#mg')){e.stopPropagation();return gopen()}if(c('[data-gx]')){e.stopPropagation();document.querySelectorAll('.bm').forEach(x=>x.remove());gm=null;return}
+if(b=c('[data-gh]')){e.stopPropagation();const x=S.hcfg.find(z=>z.id==b.dataset.gh);x.on=!x.on;save();return gfill()}
+if(b=c('[data-gm]')){e.stopPropagation();const i=S.mcfg.indexOf(b.dataset.gm);i>=0?S.mcfg.splice(i,1):S.mcfg.push(b.dataset.gm);save();return gfill()}
+if(b=c('[data-np]')){e.stopPropagation();S.navPos=b.dataset.np;save();post();return gfill()}if(c('[data-fb]')){e.stopPropagation();S.fabOff=!S.fabOff;save();post();return gfill()}if(c('[data-ics]')){e.stopPropagation();S.hideIcs=!S.hideIcs;save();return gfill()}
+if(b=c('[data-he]')){e.stopPropagation();ui.he=b.dataset.he=='1';if(ui.he){document.querySelectorAll('.bm').forEach(x=>x.remove());gm=null;ui.tab='home'}return render()}
+if(b=c('[data-wx]')){e.stopPropagation();S.hcfg.find(z=>z.id==b.dataset.wx).on=false;save();return render()}if(b=c('[data-wa]')){e.stopPropagation();S.hcfg.find(z=>z.id==b.dataset.wa).on=true;save();return render()}
+if(b=c('[data-sv]')){e.stopPropagation();ui.tab=b.dataset.sv;return render()}
+if(c('[data-hg]')){e.stopPropagation();const m=M('Фильтры ДЗ',HF.map(([k,v])=>`<label class="gr"><input type="checkbox" data-hf="${k}" ${S.hfs[k]?'checked':''} style="width:auto"><span>${v}</span></label>`).join('')+'<div class="mu" style="margin-top:8px">Открывается всегда «Активные» (не начато + в процессе).</div>');m.addEventListener('change',ev=>{const k=ev.target.dataset.hf;if(k){S.hfs[k]=ev.target.checked;save();render()}})}
+if(c('#nvh')){e.stopPropagation();return document.querySelector('nav').classList.toggle('open')}
+if(document.body.dataset.nav=='side'&&c('nav button'))setTimeout(()=>document.querySelector('nav').classList.remove('open'),50);
+if(gm&&c('.bm')&&c('[data-a^="wd:"],[data-a="notif"]'))setTimeout(gfill,60)},true);
+/* свайпы */
+let sx,sy,sT,sg;document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;sT=Date.now();sg=e.target},{passive:true});
+const hs=el=>{while(el&&el!==document.body){if(el.matches?.('input,textarea,select,[contenteditable],.cal,#bd,.bm'))return true;if(el.scrollWidth>el.clientWidth+4&&getComputedStyle(el).overflowX.match(/auto|scroll/))return true;el=el.parentElement}return false};
+document.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Date.now()-sT>600||Math.abs(dy)>55)return;
+if(document.body.dataset.nav=='side'&&sx<24&&dx>60)return document.querySelector('nav').classList.add('open');
+if(ST3.includes(ui.tab)&&Math.abs(dx)>90&&!hs(sg)){const i=ST3.indexOf(ui.tab),n=ST3[Math.max(0,Math.min(2,i+(dx<0?1:-1)))];if(n!=ui.tab){ui.tab=n;render()}}},{passive:true});
+/* видео в заметках */
+const vput=(k,b)=>idb.then(db=>new Promise((res,rej)=>{const r=db.transaction('f','readwrite').objectStore('f').put(b,k);r.onsuccess=res;r.onerror=()=>rej(r.error)})),vget=k=>idb.then(db=>new Promise((res,rej)=>{const r=db.transaction('f').objectStore('f').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const yt=u=>{const m=String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);return m&&m[1]};
+const vh=(b,i)=>{const y=b.url&&yt(b.url);const m=y?`<iframe src="https://www.youtube.com/embed/${y}" style="width:100%;aspect-ratio:16/9;border:0;border-radius:14px" allowfullscreen></iframe>`:b.url?`<video src="${esc(b.url)}" controls playsinline preload="metadata" style="width:100%;border-radius:14px;background:#000;max-height:60vh"></video>`:`<video data-vid="${b.id}" controls playsinline preload="metadata" style="width:100%;border-radius:14px;background:#000;max-height:60vh"></video><div class="mu" style="font-size:12px">${esc(b.name||'')}</div>`;return`<div class="blk" style="flex-direction:column;gap:4px;margin:8px 0">${m}${i==null?'':`<button class="chip" style="align-self:flex-end;border:0" data-a="rm:${i}">✕ убрать</button>`}</div>`};
+const _nb=nb;nb=function(b,i){return b&&b.t=='vid'?vh(b,i):_nb.apply(this,arguments)};const _lf=leaf;leaf=function(b,p){return b&&b.t=='vid'?vh(b):_lf.apply(this,arguments)};
+function hyd(){document.querySelectorAll('video[data-vid]').forEach(v=>{if(v.src)return;vget('vid:'+v.dataset.vid).then(b=>{if(b)v.src=URL.createObjectURL(b);else v.outerHTML='<div class="mu">Видео не найдено на этом устройстве</div>'}).catch(()=>{})});const m=document.querySelector('.dock .mini');if(m&&!m.querySelector('[data-vadd]'))m.insertAdjacentHTML('beforeend','<button class="chip" data-vadd="1">🎬 Видео</button>')}
+document.addEventListener('click',e=>{if(!e.target.closest?.('[data-vadd]'))return;e.stopPropagation();e.preventDefault();const m=M('🎬 Видео в заметку',`<button style="width:100%;margin:8px 0" data-vf="1">📁 Выбрать видео с телефона</button><input id="vurl" placeholder="Или ссылка: YouTube / прямая ссылка на видео"><button class="g" style="width:100%;margin-top:8px" data-vu="1">🔗 Вставить по ссылке</button><div class="mu" style="margin-top:8px">Видео с телефона хранится только на этом устройстве и не попадает в экспорт JSON.</div>`);
+m.onclick=ev=>{const x=ev.target;if(x===m)m.remove();else if(x.dataset.gx)m.remove();else if(x.dataset.vf)document.getElementById('vfile').click();else if(x.dataset.vu){const u=m.querySelector('#vurl').value.trim();if(!u)return;const n=NN();n.blocks.push({t:'vid',url:u,x:''});save();m.remove();render()}}},true);
+const vf=document.createElement('input');vf.type='file';vf.accept='video/*';vf.id='vfile';vf.style.display='none';document.body.appendChild(vf);
+vf.onchange=async()=>{const f=vf.files[0];vf.value='';if(!f)return;const id=uid();try{await vput('vid:'+id,f);const n=NN();n.blocks.push({t:'vid',id,name:f.name,x:''});save();document.querySelectorAll('.bm').forEach(x=>x.remove());render();toast('Видео добавлено')}catch(err){toast('Не удалось сохранить видео')}};
+/* общий render */
+const NV=[['home','🏠','Главная'],['sched','📅','Учёба'],['trk','🔥','Трекер'],['notes','📝','Заметки'],['more','⋯','Ещё']];let pt=null;
+function post(){document.body.dataset.nav=S.navPos||'bottom';document.body.dataset.fab=S.fabOff?'off':'on';const n=$('#nav');if(!n)return;if(ST3.includes(ui.tab))ui.ls=ui.tab;const act=ST3.includes(ui.tab)?'sched':['home','trk','notes'].includes(ui.tab)?ui.tab:'more';
+n.innerHTML=NV.map(([k,i,t])=>`<button class="${act==k?'on':''}" data-a="tab:${k=='sched'?(ui.ls||'sched'):k}"><b>${i}</b>${t}</button>`).join('');
+if(!document.getElementById('nvh')){const h=document.createElement('div');h.id='nvh';document.body.appendChild(h)}
+const app=$('#app');if(app&&ST3.includes(ui.tab)){app.insertAdjacentHTML('afterbegin',`<div class="seg">${SEG.map(([k,v])=>`<button class="${ui.tab==k?'on':''}" data-sv="${k}">${v}</button>`).join('')}</div>`)}hyd()}
+const _r=render;render=function(){const t=ui.tab;if(t=='hw'&&pt&&pt!='hw'&&!ui.fk)ui.f='act';if(t!='home')ui.he=false;
+if(t=='profile'||t=='study3'){ui.tab='more';try{_r.apply(this,arguments)}finally{ui.tab=t}document.querySelector('#app').innerHTML=t=='profile'?profV():st3V()}else _r.apply(this,arguments);post();pt=t};
+post();
+})();
+</script>
 </body></html>
 
 
