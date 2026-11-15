@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+  <shortcut android:shortcutId="newhw" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_hw" android:shortcutLongLabel="@string/sc_hw">
+    <intent android:action="android.intent.action.VIEW" android:data="planner://newhw" android:targetPackage="com.planner.mobile" android:targetClass="com.planner.mobile.MainActivity" />
+  </shortcut>
+  <shortcut android:shortcutId="newnote" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_note" android:shortcutLongLabel="@string/sc_note">
+    <intent android:action="android.intent.action.VIEW" android:data="planner://newnote" android:targetPackage="com.planner.mobile" android:targetClass="com.planner.mobile.MainActivity" />
+  </shortcut>
+  <shortcut android:shortcutId="trk" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_trk" android:shortcutLongLabel="@string/sc_trk">
+    <intent android:action="android.intent.action.VIEW" android:data="planner://trk" android:targetPackage="com.planner.mobile" android:targetClass="com.planner.mobile.MainActivity" />
+  </shortcut>
+</shortcuts>
